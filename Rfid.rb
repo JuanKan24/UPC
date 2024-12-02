@@ -1,24 +1,26 @@
-require 'mfrc522' #libreria necesaria para interectuar con el lector RFID-RC522
+require 'mfrc522' # Requiere la librería para interactuar con el lector RFID-RC522
+
 class Rfid
-def read_uid
-begin #intentamos leer la UID de la tarjeta
-r = MFRC522.new #creamos una nueva instancia de MFRC522
-r.picc_request(MFRC522::PICC_REQA) #enviamos una solicitud a la RFID
-para establecer comunicación
-uid_dec, _ = r.picc_select #intentamos leer la UID y almacenamos a la
-variable "uid_dec"
-rescue CommunicationError #capturamos la excepcion en caso de error de
-lectura o timeout
-retry #volvemos a intentarlo
+  def get_uid
+    begin
+      r = MFRC522.new # Creamos una instancia de MFRC522
+
+      r.picc_request(MFRC522::PICC_REQA) # Enviamos una solicitud a la RFID para establecer comunicación
+
+      uid_dec, _ = r.picc_select # Intentamos leer la UID y almacenamos en "uid_dec"
+
+    rescue CommunicationError # Capturamos excepciones de comunicación y reintentamos
+      retry # Reintentamos en caso de error
+    end
+
+    uid = uid_dec.map { |dec| dec.to_s(16) }.join('').upcase # Convertimos el UID a hexadecimal y lo concatenamos
+
+    return uid # Retornamos el UID en mayúsculas
+  end
 end
-#Convertimos el UID obtenido en hexadecimal y lo concatenamos en una
-cadena
-uid = uid_dec.map { |dec| dec.to_s(16) }
-return uid.join('').upcase # Retornamos el UID en mayúsculas
-end
-end
-if __FILE__ == $0 #para inicializar el programa
-rf = Rfid.new #creamos una nueva instancia de Rfid
-uid = rf.read_uid #método para leer el UID de la tarjeta
-puts "UID: " + uid #imprimos el UID por pantalla
+
+if __FILE__ == $0 # Para inicializar el programa
+  rf = Rfid.new # Creamos una instancia de Rfid
+  uid = rf.get_uid # Método para leer el UID de la tarjeta
+  puts "UID: #{uid}" # Imprimimos el UID por pantalla
 end
