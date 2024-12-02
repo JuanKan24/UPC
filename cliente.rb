@@ -49,14 +49,14 @@ class MainWindow < Gtk::Window
   end
 
   def rfid
-    @rfid = Rfid.new
+    @rfid = Rfid.new # Crear una nueva instancia de la clase Rfid
     iniciar_lectura_rfid # Iniciar lectura RFID
   end
 
   def iniciar_lectura_rfid
     # Crea un thread para leer el uid
     @thread = Thread.new do
-      @uid = @rfid.read_uid
+      @uid = @rfid.get_uid # Cambio de read_uid a get_uid
       GLib::Idle.add do
         autenticacion(@uid)
         false # Para detener la repetición de la llamada a la función
@@ -172,4 +172,32 @@ class MainWindow < Gtk::Window
       item.each_with_index do |(key, value), column_index|
         next if column_index == item.size - 1
         tarea_label = Gtk::Label.new(value.to_s)
-        grid.attach(tarea_label, column_index, row_index + 
+        grid.attach(tarea_label, column_index, row_index + 1, 1, 1)
+        tarea_label.hexpand = true
+        if row_index % 2 == 0
+          tarea_label.override_background_color(:normal, Gdk::RGBA.new(0.7, 0.7, 1.0, 1.0)) # Azul claro
+        else
+          tarea_label.override_background_color(:normal, Gdk::RGBA.new(0.5, 0.5, 1.0, 1.0)) # Azul
+        end
+      end
+    end
+    @tabla.show_all # Mostrar todo
+  end
+
+  def iniciar_timeout
+    @timeout_id = GLib::Timeout.add_seconds(15) do
+      puts "Se han superado los 15 segundos."
+      ventana_inicio
+      @tabla.hide
+      false # Para que el temporizador no se repita
+    end
+  end
+
+  def detener_timeout
+    GLib::Source.remove(@timeout_id) if @timeout_id
+  end
+end
+
+lcd_controller = LCDController.new # Crear una instancia de LCDController
+MainWindow.new(lcd_controller) # Ejecutar la aplicación
+Gtk.main
