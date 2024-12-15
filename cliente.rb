@@ -216,7 +216,7 @@ end
 
   def iniciar_timeout
     @timeout_id = GLib::Timeout.add_seconds(120) do
-      puts "Se han superado los 15 segundos."
+      puts "Se han superado los 2 minutos."
       ventana_inicio
       @tabla.hide
       false # Para que el temporizador no se repita
