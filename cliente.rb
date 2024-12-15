@@ -70,37 +70,49 @@ class MainWindow < Gtk::Window
     end
   end
 
-  def autenticacion(uid)
+ def autenticacion(uid)
+    # Construcción de la URI para la solicitud al servidor, pasando el UID del estudiante
     uri = URI("http://172.20.10.2:9000/students?student_id=#{uid}")
     begin
+      # Realiza una solicitud GET al servidor para obtener información del estudiante
       response = Net::HTTP.get_response(uri)
+
+      # Verifica si la respuesta del servidor indica éxito (código 200 OK)
       if response.is_a?(Net::HTTPSuccess)
+        # Intenta parsear el cuerpo de la respuesta como JSON
         datos = JSON.parse(response.body)
       else
+        # Manejo de errores en caso de que el servidor no devuelva un código exitoso
         puts "Error en la respuesta del servidor: #{response.code} - #{response.message}"
         @lcd_controller.printCenter("Error de autenticación.")
         @label.set_markup("Authentication error, please try again.")
-        @frame.override_background_color(:normal, Gdk::RGBA.new(1, 0, 0, 1)) # Color rojo
+        @frame.override_background_color(:normal, Gdk::RGBA.new(1, 0, 0, 1)) # Cambiar el fondo del marco a rojo
         return
       end
   
+      # Verifica si los datos recibidos tienen una estructura válida
       if datos.is_a?(Hash) && datos["students"].is_a?(Array) && !datos["students"].empty?
+        # Extrae el primer estudiante de la lista y su nombre
         student = datos["students"].first
         @nombre = student["name"]
-        ventana_query
-        puts student["name"]
+        ventana_query # Cambia a la ventana de consulta
+        puts student["name"] # Muestra el nombre del estudiante en la consola
       else
+        # Manejo de errores en caso de que no haya estudiantes en los datos
         @lcd_controller.printCenter("Authentication error, please try again.")
         @label.set_markup("Authentication error, please try again.")
-        @frame.override_background_color(:normal, Gdk::RGBA.new(1, 0, 0, 1)) # Color rojo
+        @frame.override_background_color(:normal, Gdk::RGBA.new(1, 0, 0, 1)) # Cambiar el fondo del marco a rojo
         puts "Error: datos vacíos o sin estudiantes."
       end
     rescue JSON::ParserError => e
+      # Manejo de errores en caso de que el JSON no pueda ser parseado
       puts "Error al parsear el JSON: #{e.message}"
     rescue StandardError => e
+      # Manejo de errores genéricos, como problemas de red
       puts "Error al conectar con el servidor: #{e.message}"
     end
-  end
+end
+
   
 
   def ventana_query
